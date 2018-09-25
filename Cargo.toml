@@ -1,0 +1,15 @@
+[package]
+name = "notes-server"
+version = "0.1.0"
+authors = ["Mohamed Eldebri <eldebrim@oregonstate.edu>"]
+
+[dependencies]
+futures = "0.1.24"
+tokio-core = "0.1.17"
+tokio-serde-bincode = { git = "https://github.com/alexcrichton/tokio-serde-bincode" }
+serde = "1.0.78"
+serde_derive = "1.0"
+serde_json = "1.0"
+tokio = "0.1.0"
+diesel = { version = "1.0.0", features = ["postgres"] }
+dotenv = "0.9.0"
