@@ -23,7 +23,13 @@ use tokio::io;
 use tokio::net::TcpListener;
 use tokio::prelude::*;
 
-pub fn establish_connection() -> PgConnection {
+const USAGE: &str = "
+    store [title] [note]    Add a new note to the database
+    list                    List all stored notes
+    show [id]               Show note with the specified ID
+    delete [id]             Delete note with specified ID\n";
+
+fn establish_connection() -> PgConnection {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -54,13 +60,15 @@ fn main() {
                     } else if args[0] == "list\r\n" {
                         println!("incoming: {:?}", str::from_utf8(&buf).unwrap());
                         writer.write(Class::display_string(Class::list(&connection)).as_bytes());
-                    } else if args[0] == "show\r\n" {
+                    } else if args[0] == "show" {
                         writer.write(
                             Class::display_string(Class::show(
                                 args[1].parse::<i32>().unwrap(),
                                 &connection,
                             )).as_bytes(),
                         );
+                    } else {
+                        writer.write(USAGE.as_bytes());
                     }
                 }).then(|_| Ok(()));
             tokio::spawn(process);
