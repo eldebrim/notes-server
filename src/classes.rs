@@ -57,7 +57,9 @@ impl<'a> Class {
         for class in classes {
             table.push_str(
                 &[
-                    "\nTitle: ".to_string(),
+                    "\nID: ".to_string(),
+                    class.id.to_string(),
+                    "Title: ".to_string(),
                     class.title.clone(),
                     "Note: ".to_string(),
                     class.notes.clone(),
