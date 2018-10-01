@@ -46,20 +46,20 @@ fn main() {
         .incoming()
         .map_err(|e| println!("failed to accept socket; error = {:?}", e))
         .for_each(move |socket| {
-            let buf = Vec::new();
             let (reader, mut writer) = socket.split();
-            let reader = BufReader::new(reader);
-            let process = io::read_until(reader, '\n' as u8, buf)
-                .map(move |(_, buf)| {
+            let reader = io::lines(BufReader::new(reader));
+            let process = reader
+                .for_each(move |line| {
                     let connection = establish_connection();
-                    let args: Vec<&str> = str::from_utf8(&buf).unwrap().split(' ').collect();
+                    let args: Vec<&str> = line.split(' ').collect();
                     if args[0] == "store" {
                         Class::create_class(&connection, args[1].to_string(), &args[2].to_string());
                         println!("{:?}", &Class::list(&connection)[0].title);
                         writer.write(Class::display_string(Class::list(&connection)).as_bytes());
-                    } else if args[0] == "list\r\n" {
-                        println!("incoming: {:?}", str::from_utf8(&buf).unwrap());
+                        Ok(())
+                    } else if args[0] == "list" {
                         writer.write(Class::display_string(Class::list(&connection)).as_bytes());
+                        Ok(())
                     } else if args[0] == "show" {
                         writer.write(
                             Class::display_string(Class::show(
@@ -67,10 +67,16 @@ fn main() {
                                 &connection,
                             )).as_bytes(),
                         );
+                        Ok(())
+                    } else if args[0] == "delete" {
+                        Class::delete(args[1].parse::<i32>().unwrap(), &connection);
+                        writer.write(Class::display_string(Class::list(&connection)).as_bytes());
+                        Ok(())
                     } else {
                         writer.write(USAGE.as_bytes());
+                        Ok(())
                     }
-                }).then(|_| Ok(()));
+                }).map_err(|err| println!("Could not process input: {:?}", err));
             tokio::spawn(process);
             Ok(())
         });
