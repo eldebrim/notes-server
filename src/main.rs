@@ -45,13 +45,17 @@ fn main() {
     let done = socket
         .incoming()
         .map_err(|e| println!("failed to accept socket; error = {:?}", e))
+        // Logic for each accepted connection
         .for_each(move |socket| {
             let (reader, mut writer) = socket.split();
+            // Create a stream of lines for the reader part of the socket
             let reader = io::lines(BufReader::new(reader));
             let process = reader
+                // Logic for each line in a stream
                 .for_each(move |line| {
                     let connection = establish_connection();
                     let args: Vec<&str> = line.split(' ').collect();
+                    // TODO: allow storing multiple notes using one `store` command
                     if args[0] == "store" {
                         Class::create_class(&connection, args[1].to_string(), &args[2].to_string());
                         println!("{:?}", &Class::list(&connection)[0].title);
